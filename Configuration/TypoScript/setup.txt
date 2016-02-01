@@ -1,0 +1,9 @@
+plugin.tx_libjquery {
+	settings {
+		cdn = {$plugin.tx_libjquery.settings.cdn}
+		version = {$plugin.tx_libjquery.settings.version}
+		localFallback = {$plugin.tx_libjquery.settings.localFallback}
+		debug = {$plugin.tx_libjquery.settings.debug}
+		localPath = EXT:lib_jquery/Resources/Public/JavaScript/
+	}
+}
