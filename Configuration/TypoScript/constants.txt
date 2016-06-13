@@ -2,7 +2,7 @@ plugin.tx_libjquery {
 	settings {
 		 # cat=jquery//1; type=options[,- Local -=local,Google=google,jQuery=jquery,MSN=msn,CloudFlare=cloudflare,jsDelivr=jsdelivr]; label=Choose jQuery CDN: Select 'Local', if you don't want to use a CDN and refer to a local file instead.
 		cdn = jquery
-		 # cat=jquery//2; type=options[Latest=latest,2.2.0,2.1.4,2.1.3,2.1.1,2.1.0,2.0.3,2.0.2,2.0.1,2.0.0,1.12.0,1.11.3,1.11.2,1.11.1,1.11.0,1.10.2,1.10.1,1.10.0]; label=jQuery version: Type in the prefered jQuery-version in format X.X.X (default = 'latest', which will grab the latest available version provided by this extension).
+		 # cat=jquery//2; type=options[Latest=latest,3.0.0,2.2.4,2.2.2,2.2.1,2.2.0,2.1.4,2.1.3,2.1.1,2.1.0,2.0.3,2.0.2,2.0.1,2.0.0,1.12.0,1.11.3,1.11.2,1.11.1,1.11.0,1.10.2,1.10.1,1.10.0]; label=jQuery version: Choose the preferred jQuery-version in format X.X.X (default = 'latest', which will grab the latest available version provided by this extension. Note: MSN supports only up to v2.2.3 right now!).
 		version = latest
 		 # cat=jquery//3; type=boolean; label=Enable local fallback: Enable this if a local version should be included as fallback (only used if CDN != 'Local').
 		localFallback = 1
