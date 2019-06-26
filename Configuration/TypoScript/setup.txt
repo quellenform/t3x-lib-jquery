@@ -3,7 +3,8 @@ plugin.tx_libjquery {
 		source = {$plugin.tx_libjquery.settings.source}
 		version = {$plugin.tx_libjquery.settings.version}
 		localFallback = {$plugin.tx_libjquery.settings.localFallback}
-		debug = {$plugin.tx_libjquery.settings.debug}
+		excludeFromConcatenation = {$plugin.tx_libjquery.settings.excludeFromConcatenation}
 		localPath = EXT:lib_jquery/Resources/Public/Vendor/jQuery/
+		debug = {$plugin.tx_libjquery.settings.debug}
 	}
 }

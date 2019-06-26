@@ -89,10 +89,12 @@ class PageRenderer
             $fallbackTag = '';
             // Check if file is local
             $isLocal = ($conf['source'] === 'local') ? true : false;
+            // Check if the file should be concatenated
+            $excludeFromConcatenation = (boolval($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
             // Choose minified version if debug is disabled
             $minPart = (int) $conf['debug'] ? '' : '.min';
             // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
-            $gzipPart = (int) $GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel'] ? '.gzip' : '';
+            $gzipPart = (intval($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) && $excludeFromConcatenation) ? '.gzip' : '';
             // Set path and placeholders for local file
             $this->jQueryCdnUrls['local'] = $conf['localPath'] . 'jquery-%1$s%2$s.js';
             // Generate tags for local or CDN (and fallback)
@@ -118,7 +120,7 @@ class PageRenderer
                         '" type="text/javascript"><\/script>\')</script>' . LF;
                 }
             }
-            $pObj->addJsLibrary('lib_jquery', $file, 'text/javascript', FALSE, TRUE, '|' . LF . $fallbackTag . '', TRUE);
+            $pObj->addJsLibrary('lib_jquery', $file, 'text/javascript', FALSE, TRUE, '|' . LF . $fallbackTag . '', excludeFromConcatenation);
         }
     }
 

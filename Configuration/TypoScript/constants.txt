@@ -6,7 +6,9 @@ plugin.tx_libjquery {
 		version = latest
 		 # cat=jquery//3; type=boolean; label=Enable local fallback: Enable this if a local version should be included as fallback (only used if CDN != 'Local').
 		localFallback = 1
-		 # cat=jquery//4; type=boolean; label=Debug mode: Enable this if you want to debug jQuery (this will load 'jquery-X.X.X.js' instead of 'jquery-X.X.X.min.js').
+		 # cat=jquery//4; type=boolean; label=Exclude from concatenation: Enable this if you do not want to concatenate the file (works only if file is local).
+		excludeFromConcatenation = 0
+		 # cat=jquery//5 type=boolean; label=Debug mode: Enable this if you want to debug jQuery (this will load 'jquery-X.X.X.js' instead of 'jquery-X.X.X.min.js').
 		debug = 0
 	}
 }
