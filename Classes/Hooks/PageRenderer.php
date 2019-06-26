@@ -54,11 +54,11 @@ class PageRenderer
      */
     protected $jQueryCdnUrls = [
         'local' => '',
-        'google' => '//ajax.googleapis.com/ajax/libs/jquery/%1$s/jquery%2$s.js',
-        'msn' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js',
-        'jquery' => '//code.jquery.com/jquery-%1$s%2$s.js',
-        'cloudflare' => '//cdnjs.cloudflare.com/ajax/libs/jquery/%1$s/jquery%2$s.js',
-        'jsdelivr' => '//cdn.jsdelivr.net/npm/jquery@%1$s/dist/jquery%2$s.js'
+        'google' => ['url' => '//ajax.googleapis.com/ajax/libs/jquery/%1$s/jquery%2$s.js'],
+        'msn' => ['url' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js'],
+        'jquery' => ['url' => '//code.jquery.com/jquery-%1$s%2$s.js'],
+        'cloudflare' => ['url' => '//cdnjs.cloudflare.com/ajax/libs/jquery/%1$s/jquery%2$s.js'],
+        'jsdelivr' => ['url' => '//cdn.jsdelivr.net/npm/jquery@%1$s/dist/jquery%2$s.js']
     ];
 
     /**
@@ -73,7 +73,7 @@ class PageRenderer
         // Get plugin-configuration
         $conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_libjquery.']['settings.'];
         // Generate script-tag for jquery if CDN is set
-        if (!empty($conf['cdn']) && array_key_exists($conf['cdn'], $this->jQueryCdnUrls)) {
+        if (!empty($conf['source']) && array_key_exists($conf['source'], $this->jQueryCdnUrls)) {
             // Set version-number for CDN
             if (!(int) $conf['version'] || $conf['version'] === 'latest') {
                 $versionCdn = end($this->availableLocalJqueryVersions);
@@ -87,6 +87,8 @@ class PageRenderer
                 $versionLocal = $versionCdn;
             }
             $fallbackTag = '';
+            // Check if file is local
+            $isLocal = ($conf['source'] === 'local') ? true : false;
             // Choose minified version if debug is disabled
             $minPart = (int) $conf['debug'] ? '' : '.min';
             // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
@@ -94,14 +96,14 @@ class PageRenderer
             // Set path and placeholders for local file
             $this->jQueryCdnUrls['local'] = $conf['localPath'] . 'jquery-%1$s%2$s.js';
             // Generate tags for local or CDN (and fallback)
-            if ($conf['cdn'] === 'local') {
+            if ($isLocal) {
                 // Get local version and replace placeholders
                 $file = sprintf($this->jQueryCdnUrls['local'],
                         VersionNumberUtility::convertIntegerToVersionNumber($versionLocal), $minPart) . $gzipPart;
                 $file = str_replace(PATH_site, '', GeneralUtility::getFileAbsFileName($file));
             } else {
                 // Get CDN and replace placeholders
-                $file = sprintf($this->jQueryCdnUrls[$conf['cdn']],
+                $file = sprintf($this->jQueryCdnUrls[$conf['source']]['url'],
                     VersionNumberUtility::convertIntegerToVersionNumber($versionCdn), $minPart);
                 // Generate fallback if required
                 if ((int) $conf['localFallback']) {
