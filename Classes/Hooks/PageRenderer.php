@@ -15,6 +15,7 @@ namespace Sonority\LibJquery\Hooks;
  * The TYPO3 project - inspiring people to share!
  */
 
+use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 
@@ -232,7 +233,7 @@ class PageRenderer
                 // Get local version and replace placeholders
                 $file = sprintf($this->jQueryCdnUrls['local'],
                         VersionNumberUtility::convertIntegerToVersionNumber($versionLocal), $minPart) . $gzipPart;
-                $file = str_replace(PATH_site, '', GeneralUtility::getFileAbsFileName($file));
+                $file = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($file));
             } else {
                 // Get CDN and replace placeholders
                 $file = sprintf($this->jQueryCdnUrls[$conf['source']]['url'],
@@ -245,7 +246,7 @@ class PageRenderer
                     $fileFallback = sprintf($this->jQueryCdnUrls['local'],
                             VersionNumberUtility::convertIntegerToVersionNumber($versionLocal), $minPart) . $gzipPart;
                     // Get absolute path to the fallback-file
-                    $fileFallback = str_replace(PATH_site, '', GeneralUtility::getFileAbsFileName($fileFallback));
+                    $fileFallback = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($fileFallback));
                     // Wrap it in some javascript code which will enable the fallback
                     $fallbackTag = '<script>window.jQuery || document.write(\'<script src="' .
                         htmlspecialchars($fileFallback) .

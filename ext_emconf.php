@@ -1,35 +1,23 @@
 <?php
 
-/***************************************************************
- * Extension Manager/Repository config file for ext "lib_jquery".
- *
- * Auto generated 22-02-2016 12:31
- *
- * Manual updates:
- * Only the data in the array - everything else is removed by next
- * writing. "version" and "dependencies" must not be touched!
- ***************************************************************/
-
 $EM_CONF[$_EXTKEY] = [
     'title' => 'JS Library: jQuery',
     'description' => 'Integrates the jQuery-library from CDN with a local fallback if requested library is not available. All relevant versions of jQuery (including minified and gzipped-versions) are shipped with this extension.',
-    'category' => 'misc',
-    'version' => '1.0.0',
+    'category' => 'fe',
     'state' => 'stable',
-    'uploadfolder' => false,
-    'createDirs' => '',
     'clearcacheonload' => true,
     'author' => 'Stephan Kellermayr',
     'author_email' => 'stephan.kellermayr@gmail.com',
     'author_company' => 'sonority.at - MULTIMEDIA ART DESIGN',
+    'version' => '1.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '6.2.0-7.6.99',
+            'typo3' => '6.2.0-9.9.99'
         ],
-        'conflicts' => [
-        ],
+        'conflicts' => [],
         'suggests' => [
+            'fluid_styled_content' => '',
+            'lib_bootstrap' => ''
         ]
     ]
 ];
-
