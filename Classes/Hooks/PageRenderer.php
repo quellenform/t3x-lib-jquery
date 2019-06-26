@@ -218,6 +218,8 @@ class PageRenderer
             }
             $integrity = '';
             $fallbackTag = '';
+            // Enable anonymous crossorigin-request
+            $crossorigin = boolval($conf['anonymousCrossorigin']) ? 'anonymous' : '';
             // Check if file is local
             $isLocal = ($conf['source'] === 'local') ? true : false;
             // Check if the file should be concatenated
@@ -253,7 +255,7 @@ class PageRenderer
                         '" type="text/javascript"><\/script>\')</script>' . LF;
                 }
             }
-            $pObj->addJsLibrary('lib_jquery', $file, 'text/javascript', FALSE, TRUE, '|' . LF . $fallbackTag . '', excludeFromConcatenation, '|', false, $integrity);
+            $pObj->addJsLibrary('lib_jquery', $file, 'text/javascript', FALSE, TRUE, '|' . LF . $fallbackTag . '', $excludeFromConcatenation, '|', false, $integrity, false, $crossorigin);
         }
     }
 
