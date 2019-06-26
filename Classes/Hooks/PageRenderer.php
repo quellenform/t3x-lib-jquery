@@ -58,7 +58,7 @@ class PageRenderer
         'msn' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js',
         'jquery' => '//code.jquery.com/jquery-%1$s%2$s.js',
         'cloudflare' => '//cdnjs.cloudflare.com/ajax/libs/jquery/%1$s/jquery%2$s.js',
-        'jsdelivr' => '//cdn.jsdelivr.net/jquery/%1$s/jquery%2$s.js'
+        'jsdelivr' => '//cdn.jsdelivr.net/npm/jquery@%1$s/dist/jquery%2$s.js'
     ];
 
     /**
