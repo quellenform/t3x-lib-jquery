@@ -205,7 +205,7 @@ class PageRenderer
         // Generate script-tag for jquery if CDN is set
         if (!empty($conf['source']) && array_key_exists($conf['source'], $this->jQueryCdnUrls)) {
             // Set version-number for CDN
-            if (!(int) $conf['version'] || $conf['version'] === 'latest') {
+            if (empty($conf['version']) || $conf['version'] === 'latest') {
                 $versionCdn = end($this->availableLocalJqueryVersions);
             } else {
                 $versionCdn = VersionNumberUtility::convertVersionNumberToInteger($conf['version']);
@@ -218,35 +218,45 @@ class PageRenderer
             }
             $integrity = '';
             $fallbackTag = '';
-            // Enable anonymous crossorigin-request
-            $crossorigin = boolval($conf['anonymousCrossorigin']) ? 'anonymous' : '';
+            $crossorigin = '';
             // Check if file is local
             $isLocal = ($conf['source'] === 'local') ? true : false;
             // Check if the file should be concatenated
-            $excludeFromConcatenation = (boolval($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
+            $excludeFromConcatenation = ((bool)($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
             // Choose minified version if debug is disabled
-            $minPart = (int) $conf['debug'] ? '' : '.min';
+            $minPart = (bool)($conf['debug']) ? '' : '.min';
             // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
-            $gzipPart = (intval($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) && $excludeFromConcatenation) ? '.gzip' : '';
+            $gzipPart = ((int)($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) > 0 && $excludeFromConcatenation) ? '.gzip' : '';
             // Set path and placeholders for local file
             $this->jQueryCdnUrls['local'] = $conf['localPath'] . 'jquery-%1$s%2$s.js';
             // Generate tags for local or CDN (and fallback)
             if ($isLocal) {
                 // Get local version and replace placeholders
-                $file = sprintf($this->jQueryCdnUrls['local'],
-                        VersionNumberUtility::convertIntegerToVersionNumber($versionLocal), $minPart) . $gzipPart;
+                $file = sprintf(
+                    $this->jQueryCdnUrls['local'],
+                    VersionNumberUtility::convertIntegerToVersionNumber($versionLocal),
+                    $minPart
+                ) . $gzipPart;
                 $file = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($file));
             } else {
+                // Enable anonymous crossorigin-request
+                $crossorigin = (bool)($conf['anonymousCrossorigin']) ? 'anonymous' : '';
                 // Get CDN and replace placeholders
-                $file = sprintf($this->jQueryCdnUrls[$conf['source']]['url'],
-                    VersionNumberUtility::convertIntegerToVersionNumber($versionCdn), $minPart);
+                $file = sprintf(
+                    $this->jQueryCdnUrls[$conf['source']]['url'],
+                    VersionNumberUtility::convertIntegerToVersionNumber($versionCdn),
+                    $minPart
+                );
                 // Get file integrity
-                $integrity = $this->integrity[$versionCdn][intval($conf['debug'])];
+                $integrity = $this->integrity[$versionCdn][(int)($conf['debug'])];
                 // Generate fallback if required
-                if ((int) $conf['localFallback']) {
+                if ((bool)($conf['localFallback'])) {
                     // Get local fallback version and replace placeholders
-                    $fileFallback = sprintf($this->jQueryCdnUrls['local'],
-                            VersionNumberUtility::convertIntegerToVersionNumber($versionLocal), $minPart) . $gzipPart;
+                    $fileFallback = sprintf(
+                        $this->jQueryCdnUrls['local'],
+                        VersionNumberUtility::convertIntegerToVersionNumber($versionLocal),
+                        $minPart
+                    ) . $gzipPart;
                     // Get absolute path to the fallback-file
                     $fileFallback = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($fileFallback));
                     // Wrap it in some javascript code which will enable the fallback
@@ -255,7 +265,20 @@ class PageRenderer
                         '" type="text/javascript"><\/script>\')</script>' . LF;
                 }
             }
-            $pObj->addJsLibrary('lib_jquery', $file, 'text/javascript', FALSE, TRUE, '|' . LF . $fallbackTag . '', $excludeFromConcatenation, '|', false, $integrity, false, $crossorigin);
+            $pObj->addJsLibrary(
+                'lib_jquery',
+                $file,
+                'text/javascript',
+                false,
+                true,
+                '|' . LF . $fallbackTag . '',
+                $excludeFromConcatenation,
+                '|',
+                false,
+                $integrity,
+                false,
+                $crossorigin
+            );
         }
     }
 
@@ -281,5 +304,4 @@ class PageRenderer
         }
         return $selectedVersion;
     }
-
 }
