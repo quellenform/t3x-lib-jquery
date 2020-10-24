@@ -1,7 +1,6 @@
 {
-  "name": "sonority/lib_jquery",
+  "name": "sonority/lib-jquery",
   "type": "typo3-cms-extension",
-  "version": "2.1.0",
   "description": "Integrates the jQuery-library from CDN with a local fallback if requested library is not available. All relevant versions of jQuery (including minified and gzipped-versions) are shipped with this extension.",
   "keywords": [
     "TYPO3",
@@ -10,7 +9,7 @@
     "library",
     "cdn"
   ],
-  "license": "GNU General Public License v2.0",
+  "license": "GPL-2.0-or-later",
   "homepage": "https://www.sonority.at",
   "authors": [
     {
@@ -28,8 +27,7 @@
     }
   },
   "replace": {
-    "lib_jquery": "self.version",
-    "typo3-ter/lib_jquery": "self.version"
+    "typo3-ter/lib-jquery": "self.version"
   },
   "extra": {
     "typo3/cms": {

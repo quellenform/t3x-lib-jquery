@@ -2,17 +2,11 @@
 
 namespace Sonority\LibJquery\Hooks;
 
-/*
- * This file is part of the TYPO3 CMS project.
- *
- * It is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, either version 2
- * of the License, or any later version.
+/**
+ * This file is part of the "lib_jquery" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
- *
- * The TYPO3 project - inspiring people to share!
  */
 
 use TYPO3\CMS\Core\Utility\PathUtility;
@@ -21,14 +15,9 @@ use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 
 /**
  * Add jQuery on top of javascript-stack
- *
- * @author Stephan Kellermayr <stephan.kellermayr@gmail.com>
- * @package TYPO3
- * @subpackage tx_libquery
  */
 class PageRenderer
 {
-
     /**
      * Array of jQuery version numbers shipped with this extension
      *
@@ -203,8 +192,9 @@ class PageRenderer
     /**
      * Insert javascript-tags for jQuery
      *
-     * @param array $params
-     * @param \TYPO3\CMS\Core\Page\PageRenderer $pObj
+     * @param array                             $params Parameters
+     * @param \TYPO3\CMS\Core\Page\PageRenderer $pObj   PageRenderer
+     *
      * @return void
      */
     public function renderPreProcess($params, $pObj)
@@ -234,11 +224,11 @@ class PageRenderer
             // Check if file is local
             $isLocal = ($conf['source'] === 'local') ? true : false;
             // Check if the file should be concatenated
-            $excludeFromConcatenation = ((bool)($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
+            $excludeFromConcatenation = ((bool) ($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
             // Choose minified version if debug is disabled
-            $minPart = (bool)($conf['debug']) ? '' : '.min';
+            $minPart = (bool) ($conf['debug']) ? '' : '.min';
             // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
-            $gzipPart = ((int)($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) > 0 && $excludeFromConcatenation) ? '.gzip' : '';
+            $gzipPart = ((int) ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) > 0 && $excludeFromConcatenation) ? '.gzip' : '';
             // Set path and placeholders for local file
             $this->jQueryCdnUrls['local'] = $conf['localPath'] . 'jquery-%1$s%2$s.js';
             // Generate tags for local or CDN (and fallback)
@@ -252,7 +242,7 @@ class PageRenderer
                 $file = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($file));
             } else {
                 // Enable anonymous crossorigin-request
-                $crossorigin = (bool)($conf['anonymousCrossorigin']) ? 'anonymous' : '';
+                $crossorigin = (bool) ($conf['anonymousCrossorigin']) ? 'anonymous' : '';
                 // Get CDN and replace placeholders
                 $file = sprintf(
                     $this->jQueryCdnUrls[$conf['source']]['url'],
@@ -260,9 +250,9 @@ class PageRenderer
                     $minPart
                 );
                 // Get file integrity
-                $integrity = $this->integrity[$versionCdn][(int)($conf['debug'])];
+                $integrity = $this->integrity[$versionCdn][(int) ($conf['debug'])];
                 // Generate fallback if required
-                if ((bool)($conf['localFallback'])) {
+                if ((bool) ($conf['localFallback'])) {
                     // Get local fallback version and replace placeholders
                     $fileFallback = sprintf(
                         $this->jQueryCdnUrls['local'],
@@ -312,7 +302,8 @@ class PageRenderer
     /**
      * Return nearest available version number
      *
-     * @param int $version string representation of the selected version number
+     * @param int $version String representation of the selected version number
+
      * @return int
      */
     protected function getNearestVersion($version)
@@ -322,10 +313,10 @@ class PageRenderer
         foreach ($this->availableLocalJqueryVersions as $v) {
             if ($v < $version) {
                 $selectedVersion = $v;
-            } else if ($v == $version) {
+            } elseif ($v == $version) {
                 $selectedVersion = $version;
                 break;
-            } else if ($v > $version) {
+            } elseif ($v > $version) {
                 break;
             }
         }
