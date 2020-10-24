@@ -1,4 +1,4 @@
-# lib_jquery
+# JS Library: jQuery
 TYPO3 CMS Extension "lib_jquery"
 
 What does it do?
