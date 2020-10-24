@@ -45,7 +45,8 @@ class PageRenderer
         3001000, 3001001,
         3002000, 3002001,
         3003000, 3003001,
-        3004000, 3004001
+        3004000, 3004001,
+        3005000, 3005001
     ];
 
     /**
@@ -188,6 +189,14 @@ class PageRenderer
         3004001 => [
             0 => 'sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh',
             1 => 'sha384-mlceH9HlqLp7GMKHrj5Ara1+LvdTZVMx4S1U43/NxCvAkzIo8WJ0FE7duLel3wVo'
+        ],
+        3005000 => [
+            0 => 'sha384-LVoNJ6yst/aLxKvxwp6s2GAabqPczfWh6xzm38S/YtjUyZ+3aTKOnD/OJVGYLZDl',
+            1 => 'sha384-AQhQSZGQWTMJhb/TdS7NWpCmOM/8lIEsaevSU5oZtt8pQKoa+uJL4A2WnQ0O5Zj2'
+        ],
+        3005001 => [
+            0 => 'sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2',
+            1 => 'sha384-/LjQZzcpTzaYn7qWqRIWYC5l8FWEZ2bIHIz0D73Uzba4pShEcdLdZyZkI4Kv676E'
         ]
     ];
 
