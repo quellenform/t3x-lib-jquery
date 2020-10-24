@@ -209,6 +209,9 @@ class PageRenderer
      */
     public function renderPreProcess($params, $pObj)
     {
+        $typo3Version = VersionNumberUtility::convertVersionNumberToInteger(
+            VersionNumberUtility::getCurrentTypo3Version()
+        );
         // Get plugin-configuration
         $conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_libjquery.']['settings.'];
         // Generate script-tag for jquery if CDN is set
@@ -274,20 +277,35 @@ class PageRenderer
                         '" type="text/javascript"><\/script>\')</script>' . LF;
                 }
             }
-            $pObj->addJsLibrary(
-                'lib_jquery',
-                $file,
-                'text/javascript',
-                false,
-                true,
-                '|' . LF . $fallbackTag . '',
-                $excludeFromConcatenation,
-                '|',
-                false,
-                $integrity,
-                false,
-                $crossorigin
-            );
+            if ($typo3Version >= 9000000) {
+                $pObj->addJsLibrary(
+                    'lib_jquery',
+                    $file,
+                    'text/javascript',
+                    false,
+                    true,
+                    '|' . LF . $fallbackTag . '',
+                    $excludeFromConcatenation,
+                    '|',
+                    false,
+                    $integrity,
+                    false,
+                    $crossorigin
+                );
+            } else {
+                $pObj->addJsLibrary(
+                    'lib_jquery',
+                    $file,
+                    'text/javascript',
+                    false,
+                    true,
+                    '|' . LF . $fallbackTag . '',
+                    $excludeFromConcatenation,
+                    '|',
+                    false,
+                    $integrity
+                );
+            }
         }
     }
 
