@@ -12,11 +12,12 @@ namespace Sonority\LibJquery\Hooks;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\VersionNumberUtility;
+use TYPO3\CMS\Core\Page\PageRenderer;
 
 /**
  * Add jQuery on top of javascript-stack
  */
-class PageRenderer
+class PageRendererHook
 {
     /**
      * Array of jQuery version numbers shipped with this extension
@@ -192,12 +193,11 @@ class PageRenderer
     /**
      * Insert javascript-tags for jQuery
      *
-     * @param array                             $params Parameters
-     * @param \TYPO3\CMS\Core\Page\PageRenderer $pObj   PageRenderer
-     *
+     * @param array $params Parameters
+     * @param PageRenderer $pObj PageRenderer
      * @return void
      */
-    public function renderPreProcess($params, $pObj)
+    public function renderPreProcess(array $params, PageRenderer $pObj): void
     {
         // Get plugin-configuration
         $conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_libjquery.']['settings.'];
@@ -285,10 +285,9 @@ class PageRenderer
      * Return nearest available version number
      *
      * @param int $version String representation of the selected version number
-
      * @return int
      */
-    protected function getNearestVersion($version)
+    protected function getNearestVersion(int $version): int
     {
         // Get first available version provided by this extension
         $selectedVersion = reset($this->availableLocalJqueryVersions);

@@ -8,5 +8,5 @@ $GLOBALS['TYPO3_CONF_VARS']['FE']['contentRenderingTemplates'][] = 'lib_jquery/C
 if (TYPO3_MODE === 'FE') {
     // Register hook for PageRenderer
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess'][] =
-        \Sonority\LibJquery\Hooks\PageRenderer::class . '->renderPreProcess';
+        \Sonority\LibJquery\Hooks\PageRendererHook::class . '->renderPreProcess';
 }
