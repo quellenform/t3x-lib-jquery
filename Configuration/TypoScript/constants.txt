@@ -8,11 +8,11 @@ plugin.tx_libjquery {
 		localFallback = 1
 		 # cat=jquery//4; type=boolean; label=Exclude from concatenation: Enable this if you do not want to concatenate the file (works only if file is local).
 		excludeFromConcatenation = 0
-		 # cat=jquery//5; type=boolean; label=Enable anonymous crossorigin: Enable anonymous crossorigin-request (CORS) if you have troubles with https
+		 # cat=jquery//5; type=boolean; label=Enable anonymous crossorigin: Enable anonymous crossorigin-request (CORS) if you have troubles with https.
 		anonymousCrossorigin = 1
-		 # cat=jquery//6; type=string; label=Local path: Path to the local jquery-library
+		 # cat=jquery//6; type=string; label=Local path: Path to the local jquery-library.
 		localPath = EXT:lib_jquery/Resources/Public/Vendor/jQuery/
-		 # cat=jquery//7; type=boolean; label=Debug mode: Enable this if you want to debug jQuery (this will load 'jquery-X.X.X.js' instead of 'jquery-X.X.X.min.js').
-		debug = 0
+		 # cat=jquery//7; type=boolean; label=Minified JavaScript: Enable this if you want to use the minified JavaScript (this will load 'jquery-X.X.X..minjs' instead of 'jquery-X.X.X.js').
+		minify = 1
 	}
 }

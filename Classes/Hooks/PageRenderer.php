@@ -222,8 +222,8 @@ class PageRenderer
             $isLocal = ($conf['source'] === 'local') ? true : false;
             // Check if the file should be concatenated
             $excludeFromConcatenation = ((bool) ($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
-            // Choose minified version if debug is disabled
-            $minPart = (bool) ($conf['debug']) ? '' : '.min';
+            // Choose minified version if minify is enabled
+            $minPart = (bool) ($conf['minify']) ? '.min' : '';
             // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
             $gzipPart = ((int) ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) > 0 && $excludeFromConcatenation) ? '.gzip' : '';
             // Set path and placeholders for local file
@@ -247,7 +247,7 @@ class PageRenderer
                     $minPart
                 );
                 // Get file integrity
-                $integrity = $this->integrity[$versionCdn][(int) ($conf['debug'])];
+                $integrity = $this->integrity[$versionCdn][(int) (!$conf['minify'])];
                 // Generate fallback if required
                 if ((bool) ($conf['localFallback'])) {
                     // Get local fallback version and replace placeholders

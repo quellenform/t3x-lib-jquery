@@ -6,6 +6,6 @@ plugin.tx_libjquery {
 		excludeFromConcatenation = {$plugin.tx_libjquery.settings.excludeFromConcatenation}
 		anonymousCrossorigin = {$plugin.tx_libjquery.settings.anonymousCrossorigin}
 		localPath = {$plugin.tx_libjquery.settings.localPath}
-		debug = {$plugin.tx_libjquery.settings.debug}
+		minify = {$plugin.tx_libjquery.settings.minify}
 	}
 }
