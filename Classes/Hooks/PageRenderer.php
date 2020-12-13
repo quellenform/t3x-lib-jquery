@@ -199,9 +199,6 @@ class PageRenderer
      */
     public function renderPreProcess($params, $pObj)
     {
-        $typo3Version = VersionNumberUtility::convertVersionNumberToInteger(
-            VersionNumberUtility::getCurrentTypo3Version()
-        );
         // Get plugin-configuration
         $conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_libjquery.']['settings.'];
         // Generate script-tag for jquery if CDN is set
@@ -236,7 +233,7 @@ class PageRenderer
                 // Get local version and replace placeholders
                 $file = sprintf(
                     $this->jQueryCdnUrls['local'],
-                    VersionNumberUtility::convertIntegerToVersionNumber($versionLocal),
+                    $this->convertIntegerToVersionNumber($versionLocal),
                     $minPart
                 ) . $gzipPart;
                 $file = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($file));
@@ -246,7 +243,7 @@ class PageRenderer
                 // Get CDN and replace placeholders
                 $file = sprintf(
                     $this->jQueryCdnUrls[$conf['source']]['url'],
-                    VersionNumberUtility::convertIntegerToVersionNumber($versionCdn),
+                    $this->convertIntegerToVersionNumber($versionCdn),
                     $minPart
                 );
                 // Get file integrity
@@ -256,7 +253,7 @@ class PageRenderer
                     // Get local fallback version and replace placeholders
                     $fileFallback = sprintf(
                         $this->jQueryCdnUrls['local'],
-                        VersionNumberUtility::convertIntegerToVersionNumber($versionLocal),
+                        $this->convertIntegerToVersionNumber($versionLocal),
                         $minPart
                     ) . $gzipPart;
                     // Get absolute path to the fallback-file
@@ -267,35 +264,20 @@ class PageRenderer
                         '" type="text/javascript"><\/script>\')</script>' . LF;
                 }
             }
-            if ($typo3Version >= 9000000) {
-                $pObj->addJsLibrary(
-                    'lib_jquery',
-                    $file,
-                    'text/javascript',
-                    false,
-                    true,
-                    '|' . LF . $fallbackTag . '',
-                    $excludeFromConcatenation,
-                    '|',
-                    false,
-                    $integrity,
-                    false,
-                    $crossorigin
-                );
-            } else {
-                $pObj->addJsLibrary(
-                    'lib_jquery',
-                    $file,
-                    'text/javascript',
-                    false,
-                    true,
-                    '|' . LF . $fallbackTag . '',
-                    $excludeFromConcatenation,
-                    '|',
-                    false,
-                    $integrity
-                );
-            }
+            $pObj->addJsLibrary(
+                'lib_jquery',
+                $file,
+                'text/javascript',
+                false,
+                true,
+                '|' . LF . $fallbackTag . '',
+                $excludeFromConcatenation,
+                '|',
+                false,
+                $integrity,
+                false,
+                $crossorigin
+            );
         }
     }
 
@@ -321,5 +303,18 @@ class PageRenderer
             }
         }
         return $selectedVersion;
+    }
+
+    /**
+     * Returns the three part version number (string) from an integer, eg 3015001 -> '3.15.1'
+     *
+     * @param int $versionInteger Integer representation of version number
+     * @return string Version number as format x.x.x
+     */
+    public function convertIntegerToVersionNumber(int $versionInteger = 0): string
+    {
+        $versionString = str_pad((string) $versionInteger, 9, '0', STR_PAD_LEFT);
+        $parts = str_split($versionString, 3);
+        return (int) $parts[0] . '.' . (int) $parts[1] . '.' . (int) $parts[2];
     }
 }
