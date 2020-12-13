@@ -9,15 +9,12 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Stephan Kellermayr',
     'author_email' => 'stephan.kellermayr@gmail.com',
     'author_company' => 'sonority.at - MULTIMEDIA ART DESIGN',
-    'version' => '3.0.0',
+    'version' => '3.0.1',
     'constraints' => [
         'depends' => [
             'typo3' => '9.5.23-10.9.99'
         ],
         'conflicts' => [],
-        'suggests' => [
-            'fluid_styled_content' => '',
-            'lib_bootstrap' => ''
-        ]
+        'suggests' => []
     ]
 ];
