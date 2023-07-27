@@ -1,18 +1,24 @@
 <?php
 
-namespace Sonority\LibJquery\Hooks;
+declare(strict_types=1);
 
-/**
+namespace Quellenform\LibJquery\Hooks;
+
+/*
  * This file is part of the "lib_jquery" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
  */
 
-use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\VersionNumberUtility;
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Http\ApplicationType;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 /**
  * Add jQuery on top of javascript-stack
@@ -20,32 +26,44 @@ use TYPO3\CMS\Core\Page\PageRenderer;
 class PageRendererHook
 {
     /**
-     * Array of jQuery version numbers shipped with this extension
+     * TypoScript configuration array.
      *
      * @var array
      */
-    protected $availableLocalJqueryVersions = [
-        1010000, 1010001, 1010002,
-        1011000, 1011001, 1011002, 1011003,
-        1012000,
-        2000000, 2000001, 2000002, 2000003,
-        2001000, 2001001, 2001003, 2001004,
-        2002000, 2002001, 2002003, 2002004,
-        3000000,
-        3001000, 3001001,
-        3002000, 3002001,
-        3003000, 3003001,
-        3004000, 3004001,
-        3005000, 3005001
+    private $settings = null;
+
+    /**
+     * The jsLibrary array which holds the final values.
+     *
+     * @var array
+     */
+    private $jsLibrary = [
+        'file' => '',
+        'forceOnTop' => true,
+        'allWrap' => '',
+        'excludeFromConcatenation' => false,
+        'integrity' => '',
+        'crossorigin' => ''
     ];
 
     /**
-     * Array of Content-Delivery-Networks (CDN) with placeholders
+     * Array of jQuery version numbers shipped with this extension.
      *
      * @var array
      */
-    protected $jQueryCdnUrls = [
-        'local' => '',
+    private $availableLocalJqueryVersions = [
+        3005000, 3005001,
+        3006000, 3006001, 3006002, 3006003, 3006004,
+        3007000
+    ];
+
+    /**
+     * Array of Content-Delivery-Networks (CDN) with placeholders.
+     *
+     * @var array
+     */
+    private $jQueryCdnUrls = [
+        'local' => ['url' => 'EXT:lib_jquery/Resources/Public/Vendor/jQuery/jquery-%1$s%2$s.js'],
         'google' => ['url' => '//ajax.googleapis.com/ajax/libs/jquery/%1$s/jquery%2$s.js'],
         'msn' => ['url' => '//ajax.aspnetcdn.com/ajax/jQuery/jquery-%1$s%2$s.js'],
         'jquery' => ['url' => '//code.jquery.com/jquery-%1$s%2$s.js'],
@@ -54,139 +72,59 @@ class PageRendererHook
     ];
 
     /**
-     * Array of integrity hashes
+     * Array of SRI hashes.
      * $cat jquery.js | openssl dgst -sha384 -binary | openssl base64 -A
      *
      * @var array
      */
-    protected $integrity = [
-        1010000 => [
-            0 => 'sha384-SDfd5ZIemaAmf6Ljbm07lqw2szoA1xgwjqCzgYX4TKGTvO081yWl27tPRl1jzjaT',
-            1 => 'sha384-5zg4jSLVIH70npW3C3dzc3zKoHias+JjURN/RKFpU0oWq9Nbf17miq2PC4AXePsx'
-        ],
-        1010001 => [
-            0 => 'sha384-M7ti4rBhW6K9vKaD69Y/xNT8YW/SFBQBKbSZtEdjveDyXUpsF3gmBWZRjtr0ZbCD',
-            1 => 'sha384-gwskTDRpKgp0b8KeTMEfiPCRDmNqpY2TGo7y+gyJhUGHlY1VfeXQTE4Ym3R+uXOi'
-        ],
-        1010002 => [
-            0 => 'sha384-hK8q2gkBjirpIGHAH+sgqYMv6i6mfx2JVZWJ50jyYhkuEHASU6AS1UTWSo32wuGL',
-            1 => 'sha384-r0tJvB87edk25TJle8mfwmdYBwaGtkX3r4CYHXS+2yZ7VPdI8xd2rHl6KTQ6oij4'
-        ],
-        1011000 => [
-            0 => 'sha384-/Gm+ur33q/W+9ANGYwB2Q4V0ZWApToOzRuA8md/1p9xMMxpqnlguMvk8QuEFWA1B',
-            1 => 'sha384-wXaUK2xxr5SLxv/mtBosW5jnp5oXJG8tOkdKVyfQa4szUSJfvRYiFgPdKr/BoGt+'
-        ],
-        1011001 => [
-            0 => 'sha384-UM1JrZIpBwVf5jj9dTKVvGiiZPZTLVoq4sfdvIe9SBumsvCuv6AHDNtEiIb5h1kU',
-            1 => 'sha384-wciR07FV6RBcI+YEVsZy/bInxpyn0uefUp6Yi9R5r46Qv/yk/osR5nzY31koh9Uq'
-        ],
-        1011002 => [
-            0 => 'sha384-Pn+PczAsODRZ2PiGg0IheRROpP7lXO1NTIjiPo6cca8TliBvaeil42fobhzvZd74',
-            1 => 'sha384-ACws9ykGE3FuLkDpto3htd4WDroMJsyYg0Rv3bO+B9Y37HpERfGFpgwMwj+AJG5q'
-        ],
-        1011003 => [
-            0 => 'sha384-+54fLHoW8AHu3nHtUxs9fW2XKOZ2ZwKHB5olRtKSDTKJIb1Na1EceFZMS8E72mzW',
-            1 => 'sha384-EEeHkUH6Bi7gEpctGhqp/WxHMDWLj+lN/cssQT5AXRasoLB8/4UbV786cHcBlhZS'
-        ],
-        1012000 => [
-            0 => 'sha384-XxcvoeNF5V0ZfksTnV+bejnCsJjOOIzN6UVwF85WBsAnU3zeYh5bloN+L4WLgeNE',
-            1 => 'sha384-XW9ir2wQxI+Fdr/3lkkghOtgu8RBgJcwjpSduK5VzTvKm1jLqbS2zqw6fnHn9LTC'
-        ],
-        2000000 => [
-            0 => 'sha384-RSXe9j39thYJayrqYBX6YfS7IV4bsKWZ9eEMYN+CLnB5pUyGAlXbUG/zWLqB62Na',
-            1 => 'sha384-CdwPx9ubjNqFc8hhe3VnpER1IQoQUrFGYLzCtX/1RrEVZnGWmhkVMkjSIOhK2dfv'
-        ],
-        2000001 => [
-            0 => 'sha384-XbeMbOioEXkmLLwBnrkuzXrlPiGXHcrhy8cemVjBT8AXJhCKL7vWP65VBL6Psufx',
-            1 => 'sha384-HvDSThxrD4rFcfMHrsJq83qb5TMVOOB6bBIZIag2KmOYv4PeyGYnXJZTWIR+W7of'
-        ],
-        2000002 => [
-            0 => 'sha384-1UZ2WGivCCxSFpBAaNkUfGnXmvLO/eXAvLFtIfO8t54OSIpc1dwSF7LKdARVIy/7',
-            1 => 'sha384-Oa7q0oEZI/gi1C3x6wJD+gdeCSGVQsMhZEdPj0Ce3i/50kKa1ns0RhLxXyRqx2Xt'
-        ],
-        2000003 => [
-            0 => 'sha384-5BJxsRUsHmz1Kk/hmquvrNXoqth2fWO8TW4G5MbuwrD7g7eyanb4SJ9KV+VGChAT',
-            1 => 'sha384-CQyOkvfvCvhwQOdH5W6oGDYPTE7Q+FaLVAqTfeM2O2wECkW/92wC2/QIuQFRLNtj'
-        ],
-        2001000 => [
-            0 => 'sha384-85/BFduEdDxQ86xztyNu4BBkVZmlvu+iB7zhBu0VoYdq+ODs3PKpU6iVE3ZqPMut',
-            1 => 'sha384-Zs6hQFvI8SnJnsfOJN79J1olsSzbRiiTRFI3MKnUr3Mr/SYHHA7O39r6HPJYLrzS'
-        ],
-        2001001 => [
-            0 => 'sha384-fj9YEHKNa/e0CNquG4NcocjoyMATYo1k2Ff5wGB42C/9AwOlJjDoySPtNJalccfI',
-            1 => 'sha384-OhORL1bfiBqoyzpjW+0vUZ33mZ0eAsE3yqUM/7s7BFH8C1n6BsioFATPtW2HJX3R'
-        ],
-        2001003 => [
-            0 => 'sha384-E7gp+UYBLS2XewcxoJbfi0UpGMHSvt9XyI9bH4YIw5GDGW8AlC+2J7bVBBlMFC6p',
-            1 => 'sha384-qeGYpo1beiY4wzqymFFtQd2+y7Y1MIcqZ0k6kfWaM3AZlt2MF/+iaqFhoSd4f7zA'
-        ],
-        2001004 => [
-            0 => 'sha384-R4/ztc4ZlRqWjqIuvf6RX5yb/v90qNGx6fS48N0tRxiGkqveZETq72KgDVJCp2TC',
-            1 => 'sha384-1qy6pxCPVEhkjPJM8mBaaRNIDGE20UzrPyndMEoCaeK390vhZ3jt3SQtS6aZDqRA'
-        ],
-        2002000 => [
-            0 => 'sha384-K+ctZQ+LL8q6tP7I94W+qzQsfRV2a+AfHIi9k8z8l9ggpc8X+Ytst4yBo/hH+8Fk',
-            1 => 'sha384-YLaE+8cMSCcSIhxjU/oq+EdgFwCRhLWjvna+rClG1pfJ+Fi5929axqLBLB1roPrJ'
-        ],
-        2002001 => [
-            0 => 'sha384-8C+3bW/ArbXinsJduAjm9O7WNnuOcO+Bok/VScRYikawtvz4ZPrpXtGfKIewM9dK',
-            1 => 'sha384-0fYOtFLBCRNBtt6roCCNUh4ZV0Zr+ag0wIzFqgiMF7AkGHJDrAeNNiLwxhjv93an'
-        ],
-        2002002 => [
-            0 => 'sha384-mXQoED/lFIuocc//nss8aJOIrz7X7XruhR6bO+sGceiSyMELoVdZkN7F0oYwcFH+',
-            1 => 'sha384-wXzUADPF9Bz2799p4Pdz47lL4QjBMFbtTd1W0IuSlgSsY0YgldTUrinwB2mFzmVK'
-        ],
-        2002003 => [
-            0 => 'sha384-I6F5OKECLVtK/BL+8iSLDEHowSAfUo76ZL9+kGAgTRdiByINKJaqTPH/QVNS1VDb',
-            1 => 'sha384-Sslvlvc3erwg2M8wKR5WKJgcxp5BextrY7gzTAmVZ6xFvWgWbe6KQSOHxvdNdiYv'
-        ],
-        2002004 => [
-            0 => 'sha384-rY/jv8mMhqDabXSo+UCggqKtdmBfd3qC2/KvyTDNQ6PcUJXaxK1tMepoQda4g5vB',
-            1 => 'sha384-TlQc6091kl7Au04dPgLW7WK3iey+qO8dAi/LdwxaGBbszLxnizZ4xjPyNrEf+aQt'
-        ],
-        3000000 => [
-            0 => 'sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY',
-            1 => 'sha384-4s7h2GHjGL3pidmgZNMUflDgyCMrPn1cnW/2NsD1U7SCZcCU5lBzlNhd6QENeuSK'
-        ],
-        3001000 => [
-            0 => 'sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq',
-            1 => 'sha384-Te3ltuYHeiA5s5F5AZJT+ypl5KHViBntHsSyFm38sNPyiMAOYCIMiegWF4UT+vxK'
-        ],
-        3001001 => [
-            0 => 'sha384-3ceskX3iaEnIogmQchP8opvBy3Mi7Ce34nWjpBIwVTHfGYWQS9jwHDVRnpKKHJg7',
-            1 => 'sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m'
-        ],
-        3002000 => [
-            0 => 'sha384-o9KO9jVK1Q4ybtHgJCCHfgQrTRNlkT6SL3j/qMuBMlDw3MmFrgrOHCOaIMJWGgK5',
-            1 => 'sha384-Z7BISSdO0r7B6SzrJbAMx7YC8qHx9BpV4iJow8J2pCY4jWj2LYgFfCMekrfmST4m'
-        ],
-        3002001 => [
-            0 => 'sha384-xBuQ/xzmlsLoJpyjoggmTEz8OWUFM0/RC5BsqQBDX2v5cMvDHcMakNTNrHIW2I5f',
-            1 => 'sha384-p7RDedFtQzvcp0/3247fDud39nqze/MUmahi6MOWjyr3WKWaMOyqhXuCT1sM9Q+l'
-        ],
-        3003000 => [
-            0 => 'sha384-T71zTKG4DxXKaUTgGmqdaNdSf9Y4FQsJDVhzYmnC9z5+3PkzQoBZtfc69ySrMK/J',
-            1 => 'sha384-OhEg3Gh/4fPZov0xAAH7gRe8gGgHFsLLIJt0gEKvTqAnpjxedEW1CXSwt25y+rDd'
-        ],
-        3003001 => [
-            0 => 'sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT',
-            1 => 'sha384-fJU6sGmyn07b+uD1nMk7/iSb4yvaowcueiQhfVgQuD98rfva8mcr1eSvjchfpMrH'
-        ],
-        3004000 => [
-            0 => 'sha384-JUMjoW8OzDJw4oFpWIB2Bu/c6768ObEthBMVSiIx4ruBIEdyNSUQAjJNFqT5pnJ6',
-            1 => 'sha384-WGhEWG1n4j4SSTvTWxHLVbwDs5irzinCJT89aUzyS2H/wY2d2eZrUWSsNyCucTYy'
-        ],
-        3004001 => [
-            0 => 'sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh',
-            1 => 'sha384-mlceH9HlqLp7GMKHrj5Ara1+LvdTZVMx4S1U43/NxCvAkzIo8WJ0FE7duLel3wVo'
-        ],
+    private $sriHashes = [
         3005000 => [
-            0 => 'sha384-LVoNJ6yst/aLxKvxwp6s2GAabqPczfWh6xzm38S/YtjUyZ+3aTKOnD/OJVGYLZDl',
-            1 => 'sha384-AQhQSZGQWTMJhb/TdS7NWpCmOM/8lIEsaevSU5oZtt8pQKoa+uJL4A2WnQ0O5Zj2'
+            'sha512-cEgdeh0IWe1pUYypx4mYPjDxGB/tyIORwjxzKrnoxcif2ZxI7fw81pZWV0lGnPWLrfIHGA7qc964MnRjyCYmEQ==',
+            'sha512-k2WPPrSgRFI6cTaHHhJdc8kAXaRM4JBFEDo1pPGGlYiOyv4vnA0Pp0G5XMYYxgAPmtmv/IIaQA6n5fLAyJaFMA==',
+            'sha512-yE2jpwVUl+o8LXPtfSETDOBUyQlMyyekY2u2Ds8d9OGVhQrCJMRl1f32gAZdg8ZE6Rcqf1Di8mu3L9vZtRIw5w==',
+            'sha512-L/VGU4zvy5QAszSof84v07PyoLWojkWLGLlUMiFcIvgAP2jhPPdFmoT4MTt+rGMT9aAM6HQzIpL6sKsc7LdQtg=='
         ],
         3005001 => [
-            0 => 'sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2',
-            1 => 'sha384-/LjQZzcpTzaYn7qWqRIWYC5l8FWEZ2bIHIz0D73Uzba4pShEcdLdZyZkI4Kv676E'
+            'sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ==',
+            'sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==',
+            'sha512-1lagjLfnC1I0iqH9plHYIUq3vDMfjhZsLy9elfK89RBcpcRcx4l+kRJBSnHh2Mh6kLxRHoObD1M5UTUbgFy6nA==',
+            'sha512-/DXTXr6nQodMUiq+IUJYCt2PPOUjrHJ9wFrqpJ3XkgPNOZVfMok7cRw6CSxyCQxXn6ozlESsSh1/sMCTF1rL/g=='
+        ],
+        3006000 => [
+            'sha512-n/4gHW3atM3QqRcbCn6ewmpxcLAHGaDjpEBu4xZd47N0W2oQ+6q7oc3PXstrJYXcbNU1OHdQ1T7pAP+gi5Yu8g==',
+            'sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==',
+            'sha512-HNbo1d4BaJjXh+/e6q4enTyezg5wiXvY3p/9Vzb20NIvkJghZxhzaXeffbdJuuZSxFhJP87ORPadwmU9aN3wSA==',
+            'sha512-6ORWJX/LrnSjBzwefdNUyLCMTIsGoNP6NftMy2UAm1JBm6PRZCO1d7OHBStWpVFZLO+RerTvqX/Z9mBFfCJZ4A=='
+        ],
+        3006001 => [
+            'sha512-CX7sDOp7UTAq+i1FYIlf9Uo27x4os+kGeoT7rgwvY+4dmjqV0IuE/Bl5hVsjnQPQiTOhAX1O2r2j5bjsFBvv/A==',
+            'sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==',
+            'sha512-1cF8XUz5U3BlnRVqNFn+aPNwwSr/FPtrmKvM1g4dJJ9tg8kmqRUzqbSOvRRAMScDnTkOcOnnfwF3+jRA/nE2Ow==',
+            'sha512-yBpuflZmP5lwMzZ03hiCLzA94N0K2vgBtJgqQ2E1meJzmIBfjbb7k4Y23k2i2c/rIeSUGc7jojyIY5waK3ZxCQ=='
+        ],
+        3006002 => [
+            'sha512-NMtENEqUQ8zHZWjwLg6/1FmcTWwRS2T5f487CCbQB3pQwouZfbrQfylryimT3XvQnpE7ctEKoZgQOAkWkCW/vg==',
+            'sha512-tWHlutFnuG0C6nQRlpvrEhE4QpkG1nn2MOUMWmUeRePl4e3Aki0VB6W1v3oLjFtd0hVOtRQ9PHpSfN6u6/QXkQ==',
+            'sha512-UgtCdy5Rd9HYhTf2bbpDOErKyhUevrYlfnMYm/nV5pb48ZN4i0cCw0vt0Gt2DBUWf7OBgcbLOzB7uhjuH3601w==',
+            'sha512-1e7eG2wdX0SfkBsRkR+ETYdfg0UfcdMpYeH0FXKFCceSJkB9jzetxVpUvNAgTuUfJDhbRQdkuLvylB7U2N2uhg=='
+        ],
+        3006003 => [
+            'sha512-nO7wgHUoWPYGCNriyGzcFwPSF+bPDOR+NvtOYy2wMcWkrnCNPKBcFEkU80XIN14UVja0Gdnff9EmydyLlOL7mQ==',
+            'sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ==',
+            'sha512-M3zrhxXOYQaeBJYLBv7DsKg2BWwSubf6htVyjSkjc9kPqx7Se98+q1oYyBJn2JZXzMaZvUkB8QzKAmeVfzj9ug==',
+            'sha512-jxwTCbLJmXPnV277CvAjAcWAjURzpephk0f0nO2lwsvcoDMqBdy1rh1jEwWWTabX1+Grdmj9GFAgtN22zrV0KQ=='
+        ],
+        3006004 => [
+            'sha512-6DC1eE3AWg1bgitkoaRM1lhY98PxbMIbhgYCGV107aZlyzzvaWCW1nJW2vDuYQm06hXrW0As6OGKcIaAVWnHJw==',
+            'sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ==',
+            'sha512-G1QAKkF7DrLYdKiz55LTK3Tlo8Vet2JnjQHuJh+LnU0zimJkMZ7yKZ/+lQ/0m94NC1EisSVS1b35jugu3wLdQg==',
+            'sha512-fYjSocDD6ctuQ1QGIo9+Nn9Oc4mfau2IiE8Ki1FyMV4OcESUt81FMqmhsZe9zWZ6g6NdczrEMAos1GlLLAipWg=='
+        ],
+        3007000 => [
+            'sha512-8Z5++K1rB3U+USaLKG6oO8uWWBhdYsM3hmdirnOEWp8h2B1aOikj5zBzlXs8QOrvY9OxEnD2QDkbSKKpfqcIWw==',
+            'sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw==',
+            'sha512-JC/KiiKXoc40I1lqZUnoRQr96y5/q4Wxrq5w+WKqbg/6Aq0ivpS2oZ24x/aEtTRwxahZ/KOApxy8BSZOeLXMiA==',
+            'sha512-5NqgLBAYtvRsyAzAvEBWhaW+NoB+vARl6QiA02AFMhCWvPpi7RWResDcTGYvQtzsHVCfiUhwvsijP+3ixUk1xw=='
         ]
     ];
 
@@ -194,100 +132,263 @@ class PageRendererHook
      * Insert javascript-tags for jQuery
      *
      * @param array $params Parameters
-     * @param PageRenderer $pObj PageRenderer
+     * @param PageRenderer $pageRenderer PageRenderer
      * @return void
      */
-    public function renderPreProcess(array $params, PageRenderer $pObj): void
+    public function renderPreProcess(array $params, PageRenderer $pageRenderer): void
     {
-        // Get plugin-configuration
-        $conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_libjquery.']['settings.'];
-        // Generate script-tag for jquery if CDN is set
-        if (!empty($conf['source']) && array_key_exists($conf['source'], $this->jQueryCdnUrls)) {
-            // Set version-number for CDN
-            if (empty($conf['version']) || $conf['version'] === 'latest') {
-                $versionCdn = end($this->availableLocalJqueryVersions);
-            } else {
-                $versionCdn = VersionNumberUtility::convertVersionNumberToInteger($conf['version']);
+        if (
+            ($GLOBALS['TYPO3_REQUEST'] ?? null) instanceof ServerRequestInterface
+            && ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()
+        ) {
+            if ($this->initilialize()) {
+                $this->prepareSettings();
+                $this->setJsLibrary();
+                $this->addJsLibrary($pageRenderer);
             }
-            // Set correct version-number for local version
-            if (!in_array($versionCdn, $this->availableLocalJqueryVersions)) {
-                $versionLocal = $this->getNearestVersion($versionCdn);
-            } else {
-                $versionLocal = $versionCdn;
-            }
-            $integrity = '';
-            $fallbackTag = '';
-            $crossorigin = '';
-            // Check if file is local
-            $isLocal = ($conf['source'] === 'local') ? true : false;
-            // Check if the file should be concatenated
-            $excludeFromConcatenation = ((bool) ($conf['excludeFromConcatenation']) || !$isLocal) ? true : false;
-            // Choose minified version if minify is enabled
-            $minPart = (bool) ($conf['minify']) ? '.min' : '';
-            // Deliver gzipped-version if compression is activated and client supports gzip (compression done with "gzip --best -k -S .gzip")
-            $gzipPart = ((int) ($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['compressionLevel']) > 0 && $excludeFromConcatenation) ? '.gzip' : '';
-            // Set path and placeholders for local file
-            $this->jQueryCdnUrls['local'] = $conf['localPath'] . 'jquery-%1$s%2$s.js';
-            // Generate tags for local or CDN (and fallback)
-            if ($isLocal) {
-                // Get local version and replace placeholders
-                $file = sprintf(
-                    $this->jQueryCdnUrls['local'],
-                    $this->convertIntegerToVersionNumber($versionLocal),
-                    $minPart
-                ) . $gzipPart;
-                $file = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($file));
-            } else {
-                // Enable anonymous crossorigin-request
-                $crossorigin = (bool) ($conf['anonymousCrossorigin']) ? 'anonymous' : '';
-                // Get CDN and replace placeholders
-                $file = sprintf(
-                    $this->jQueryCdnUrls[$conf['source']]['url'],
-                    $this->convertIntegerToVersionNumber($versionCdn),
-                    $minPart
-                );
-                // Get file integrity
-                $integrity = $this->integrity[$versionCdn][(int) (!$conf['minify'])];
-                // Generate fallback if required
-                if ((bool) ($conf['localFallback'])) {
-                    // Get local fallback version and replace placeholders
-                    $fileFallback = sprintf(
-                        $this->jQueryCdnUrls['local'],
-                        $this->convertIntegerToVersionNumber($versionLocal),
-                        $minPart
-                    ) . $gzipPart;
-                    // Get absolute path to the fallback-file
-                    $fileFallback = PathUtility::stripPathSitePrefix(GeneralUtility::getFileAbsFileName($fileFallback));
-                    // Wrap it in some javascript code which will enable the fallback
-                    $fallbackTag = '<script>window.jQuery || document.write(\'<script src="' .
-                        htmlspecialchars($fileFallback) .
-                        '" type="text/javascript"><\/script>\')</script>' . LF;
+        }
+    }
+
+    /**
+     * Initialize the settings array and decide what to do next.
+     *
+     * @return bool
+     */
+    private function initilialize(): bool
+    {
+        // Get the plugin configuration
+        $this->settings = GeneralUtility::makeInstance(ConfigurationManager::class)
+            ->getConfiguration(
+                ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
+            )['plugin.']['tx_libjquery.']['settings.'] ?? [];
+        if (
+            isset($this->settings['enable']) &&
+            (bool) ($this->settings['enable']) &&
+            isset($this->settings['source']) &&
+            array_key_exists(
+                $this->settings['source'],
+                $this->jQueryCdnUrls
+            )
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Fill the settings array with meaningful values.
+     *
+     * @return void
+     */
+    private function prepareSettings(): void
+    {
+        $source = (string) $this->settings['source'];
+        $version = $this->settings['version'] ?? 'latest';
+        $localFallback = $this->settings['localFallback'] ?? true;
+        $excludeFromConcatenation = $this->settings['excludeFromConcatenation'] ?? false;
+        $anonymousCrossorigin = $this->settings['anonymousCrossorigin'] ?? true;
+        $slim = $this->settings['slim'] ?? false;
+        $minify = $this->settings['minify'] ?? true;
+        $forceOnTop = $this->settings['forceOnTop'] ?? true;
+        $forceVersion = $this->settings['forceVersion'] ?? false;
+        $localPath = $this->settings['localPath'] ?? '';
+        $sriHash = $this->settings['sriHash'] ?? '';
+        $addJsFooterLibrary = $this->settings['addJsFooterLibrary'] ?? false;
+
+        $versionCdn = 0;
+        if (!(empty($version) || $version === 'latest') && (bool) $forceVersion) {
+            $versionCdn = VersionNumberUtility::convertVersionNumberToInteger($version);
+        }
+        if ($versionCdn === 0) {
+            $versionCdn = end($this->availableLocalJqueryVersions);
+        }
+
+        // Set correct version-number for local version
+        $versionLocal = $versionCdn;
+        if (!in_array($versionCdn, $this->availableLocalJqueryVersions)) {
+            $versionLocal = $this->getNearestVersion($versionCdn);
+        }
+
+        // Set path to the local fallback file
+        if (empty($this->settings['localPath'])) {
+            $localPath = $this->jQueryCdnUrls['local']['url'];
+        }
+
+        // Enable the use of an external CDN
+        $useCdn = false;
+        if ($source !== 'local') {
+            $useCdn = true;
+            $excludeFromConcatenation = true;
+        }
+
+        // Enable gzip-version if compression is enabled and concatenation is disabled
+        $gzip = false;
+        if ((int) ($GLOBALS['TYPO3_CONF_VARS']['FE']['compressionLevel']) > 0 && (bool) $excludeFromConcatenation) {
+            $gzip = true;
+        }
+
+        // Overwrite settings array
+        $this->settings = [
+            'source' => $source,
+            'versionCdn' => $versionCdn,
+            'versionLocal' => $versionLocal,
+            'localFallback' => (bool) $localFallback,
+            'excludeFromConcatenation' => (bool) $excludeFromConcatenation,
+            'anonymousCrossorigin' => (bool) $anonymousCrossorigin,
+            'slim' => (bool) $slim,
+            'minify' => (bool) $minify,
+            'forceOnTop' => (bool) $forceOnTop,
+            'localPath' => (string) $localPath,
+            'sriHash' => (string) $sriHash,
+            'useCdn' => $useCdn,
+            'gzip' => $gzip,
+            'addJsFooterLibrary' => (bool) $addJsFooterLibrary
+        ];
+    }
+
+    /**
+     * Fill the JSLibrary array with useful values.
+     *
+     * @return void
+     */
+    private function setJsLibrary(): void
+    {
+        $filePart = ($this->settings['slim'] ? '.slim' : '') . ($this->settings['minify'] ? '.min' : '');
+        $local = true;
+
+        if ($this->settings['useCdn']) {
+            $url = $this->jQueryCdnUrls[$this->settings['source']]['url'];
+            $version = $this->settings['versionCdn'];
+            $local = false;
+            if ($this->settings['anonymousCrossorigin']) {
+                if (!empty($this->settings['sriHash'])) {
+                    // Override SRI Hash value
+                    $this->jsLibrary['integrity'] = $this->settings['sriHash'];
+                } else {
+                    if (in_array($this->settings['versionCdn'], array_keys($this->sriHashes))) {
+                        // Get hash index
+                        $hashIndex = (int) ($this->settings['minify']);
+                        if ($this->settings['slim']) {
+                            $hashIndex += 2;
+                        }
+                        $this->jsLibrary['integrity'] = $this->sriHashes[$this->settings['versionCdn']][$hashIndex];
+                    }
                 }
             }
-            $pObj->addJsLibrary(
+            if ($this->settings['localFallback']) {
+                $this->jsLibrary['allWrap'] = $this->wrapFallback(
+                    $this->replaceFilePlaceholders(
+                        $this->settings['localPath'],
+                        $this->convertIntegerToVersionNumber($this->settings['versionLocal']),
+                        $filePart,
+                        true
+                    )
+                );
+            }
+            $this->jsLibrary['crossorigin'] = $this->settings['anonymousCrossorigin'] ? 'anonymous' : '';
+        } else {
+            $url = $this->settings['localPath'];
+            $version = $this->settings['versionLocal'];
+        }
+        $this->jsLibrary['excludeFromConcatenation'] = $this->settings['excludeFromConcatenation'];
+        $this->jsLibrary['file'] = $this->replaceFilePlaceholders(
+            $url,
+            $this->convertIntegerToVersionNumber($version),
+            $filePart,
+            $local
+        );
+    }
+
+     /**
+      * Wrap the local fallback file in some javascript code which will enable the fallback.
+      *
+      * @return string
+      */
+    private function wrapFallback(string $file): string
+    {
+        return '|' . LF . '<script>window.jQuery || document.write(\'<script src="' .
+            htmlspecialchars($file) .
+            '" type="text/javascript"><\/script>\')</script>' . LF;
+    }
+
+    /**
+     * Replace placeholders in file string.
+     *
+     * @param string $url
+     * @param string $version
+     * @param boolean $external
+     *
+     * @return string
+     */
+    private function replaceFilePlaceholders(
+        string $url,
+        string $version,
+        string $filePart,
+        bool $local = false
+    ): string {
+        $file = sprintf(
+            $url,
+            $version,
+            $filePart
+        ) . (($this->settings['gzip'] && $local) ? '.gzip' : '');
+        // Get relative path if the given file is local
+        if (substr($file, 0, 2) !== '//') {
+            $file = PathUtility::stripPathSitePrefix(
+                GeneralUtility::getFileAbsFileName($file)
+            );
+        }
+        return $file;
+    }
+
+    /**
+     * Add the library to the PageRenderer.
+     *
+     * @param \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer
+     *
+     * @return void
+     */
+    private function addJsLibrary(PageRenderer $pageRenderer): void
+    {
+        if ($this->settings['addJsFooterLibrary']) {
+            $pageRenderer->addJsFooterLibrary(
                 'lib_jquery',
-                $file,
+                $this->jsLibrary['file'],
                 'text/javascript',
                 false,
-                true,
-                '|' . LF . $fallbackTag . '',
-                $excludeFromConcatenation,
+                $this->jsLibrary['forceOnTop'],
+                $this->jsLibrary['allWrap'],
+                $this->jsLibrary['excludeFromConcatenation'],
                 '|',
                 false,
-                $integrity,
+                $this->jsLibrary['integrity'],
                 false,
-                $crossorigin
+                $this->jsLibrary['crossorigin']
+            );
+        } else {
+            $pageRenderer->addJsLibrary(
+                'lib_jquery',
+                $this->jsLibrary['file'],
+                'text/javascript',
+                false,
+                $this->jsLibrary['forceOnTop'],
+                $this->jsLibrary['allWrap'],
+                $this->jsLibrary['excludeFromConcatenation'],
+                '|',
+                false,
+                $this->jsLibrary['integrity'],
+                false,
+                $this->jsLibrary['crossorigin']
             );
         }
     }
 
     /**
-     * Return nearest available version number
+     * Return nearest available version number.
      *
      * @param int $version String representation of the selected version number
      * @return int
      */
-    protected function getNearestVersion(int $version): int
+    private function getNearestVersion(int $version): int
     {
         // Get first available version provided by this extension
         $selectedVersion = reset($this->availableLocalJqueryVersions);
@@ -305,12 +406,12 @@ class PageRendererHook
     }
 
     /**
-     * Returns the three part version number (string) from an integer, eg 3015001 -> '3.15.1'
+     * Returns the three part version number (string) from an integer, eg 3015001 -> '3.15.1'.
      *
      * @param int $versionInteger Integer representation of version number
      * @return string Version number as format x.x.x
      */
-    public function convertIntegerToVersionNumber(int $versionInteger = 0): string
+    private function convertIntegerToVersionNumber(int $versionInteger = 0): string
     {
         $versionString = str_pad((string) $versionInteger, 9, '0', STR_PAD_LEFT);
         $parts = str_split($versionString, 3);

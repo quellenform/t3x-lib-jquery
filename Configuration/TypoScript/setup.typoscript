@@ -1,11 +1,17 @@
 plugin.tx_libjquery {
 	settings {
+    enable = {$plugin.tx_libjquery.settings.enable}
 		source = {$plugin.tx_libjquery.settings.source}
 		version = {$plugin.tx_libjquery.settings.version}
 		localFallback = {$plugin.tx_libjquery.settings.localFallback}
 		excludeFromConcatenation = {$plugin.tx_libjquery.settings.excludeFromConcatenation}
 		anonymousCrossorigin = {$plugin.tx_libjquery.settings.anonymousCrossorigin}
-		localPath = {$plugin.tx_libjquery.settings.localPath}
-		minify = {$plugin.tx_libjquery.settings.minify}
+		slim = {$plugin.tx_libjquery.settings.slim}
+    minify = {$plugin.tx_libjquery.settings.minify}
+    forceOnTop = 1
+    addJsFooterLibrary = 0
+    forceVersion = 0
+		localPath =
+    sriHash =
 	}
 }
