@@ -333,9 +333,15 @@ class PageRendererHook
         ) . (($this->settings['gzip'] && $local) ? '.gzip' : '');
         // Get relative path if the given file is local
         if (substr($file, 0, 2) !== '//') {
-            $file = PathUtility::stripPathSitePrefix(
-                GeneralUtility::getFileAbsFileName($file)
-            );
+            $version = VersionNumberUtility::getCurrentTypo3Version();
+            if ((int) substr($version, 0, 2) > 10) {
+                $file = PathUtility::getPublicResourceWebPath($file);
+            } else {
+                if (substr($file, 0, 4) === 'EXT:') {
+                    $file = GeneralUtility::getFileAbsFileName($file);
+                }
+                $file = PathUtility::getAbsoluteWebPath($file);
+            }
         }
         return $file;
     }
