@@ -1,37 +1,51 @@
 {
-  "name": "sonority/lib-jquery",
-  "type": "typo3-cms-extension",
-  "description": "Integrates the jQuery-library from CDN with a local fallback if requested library is not available. All relevant versions of jQuery (including minified and gzipped-versions) are shipped with this extension.",
-  "keywords": [
-    "TYPO3",
-    "extension",
-    "jquery",
-    "library",
-    "cdn"
-  ],
-  "license": "GPL-2.0-or-later",
-  "homepage": "https://www.sonority.at",
-  "authors": [
-    {
-      "name": "Stephan Kellermayr",
-      "email": "stephan.kellermayr@gmail.com",
-      "role": "Developer"
-    }
-  ],
-  "require": {
-    "typo3/cms-core": "^9.5.23 || ^10.4.10"
-  },
-  "autoload": {
-    "psr-4": {
-      "Sonority\\LibJquery\\": "Classes"
-    }
-  },
-  "replace": {
-    "typo3-ter/lib-jquery": "self.version"
-  },
-  "extra": {
-    "typo3/cms": {
-      "extension-key": "lib_jquery"
-    }
-  }
+	"name": "quellenform/t3x-lib-jquery",
+	"type": "typo3-cms-extension",
+	"description": "Integrates the jQuery-library from CDN with a local fallback if requested library is not available. All relevant versions of jQuery (including minified and gzipped-versions) are shipped with this extension.",
+	"keywords": [
+		"TYPO3",
+		"extension",
+		"jquery",
+		"library",
+		"cdn"
+	],
+	"license": [
+		"GPL-3.0-or-later"
+	],
+	"homepage": "https://extensions.typo3.org/extension/lib_jquery",
+	"support": {
+		"source": "https://github.com/quellenform/t3x-lib-jquery",
+		"issues": "https://github.com/quellenform/t3x-lib-jquery/issues"
+	},
+	"authors": [
+		{
+			"name": "Stephan Kellermayr",
+			"email": "typo3@quellenform.at",
+			"role": "Developer",
+			"homepage": "https://www.quellenform.at/"
+		}
+	],
+	"require": {
+		"php": ">=7.2.0",
+		"typo3/cms-core": "^10.4 || ^11 || ^12.5"
+	},
+	"autoload": {
+		"psr-4": {
+			"Quellenform\\LibJquery\\": "Classes"
+		}
+	},
+	"replace": {
+		"typo3-ter/lib_jquery": "self.version"
+	},
+	"repositories": [
+		{
+			"type": "composer",
+			"url": "https://composer.typo3.org/"
+		}
+	],
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "lib_jquery"
+		}
+	}
 }
