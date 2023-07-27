@@ -8,15 +8,15 @@
     <dc:title>lib_jquery</dc:title>
     <dc:creator>
      <cc:Agent>
-      <dc:title>stephan.kellermayr@gmail.com</dc:title>
+      <dc:title>typo3@quellenform.at</dc:title>
      </cc:Agent>
     </dc:creator>
     <dc:rights>
      <cc:Agent>
-      <dc:title>sonority.at</dc:title>
+      <dc:title>quellenform.at</dc:title>
      </cc:Agent>
     </dc:rights>
-    <dc:date>04.12.2015</dc:date>
+    <dc:date>26.07.2023</dc:date>
    </cc:Work>
   </rdf:RDF>
  </metadata>
