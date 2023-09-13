@@ -12,3 +12,4 @@
 /var
 /yarn-error.log
 /yarn.lock
+*.sh
