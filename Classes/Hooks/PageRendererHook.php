@@ -73,7 +73,7 @@ class PageRendererHook
 
     /**
      * Array of SRI hashes.
-     * $cat jquery.js | openssl dgst -sha384 -binary | openssl base64 -A
+     * $cat jquery.js | openssl dgst -sha512 -binary | openssl base64 -A
      *
      * @var array
      */
