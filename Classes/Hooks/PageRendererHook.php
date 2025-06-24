@@ -147,7 +147,7 @@ class PageRendererHook
             ($GLOBALS['TYPO3_REQUEST'] ?? null) instanceof ServerRequestInterface
             && ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()
         ) {
-            if ($this->initilialize()) {
+            if ($this->initialize()) {
                 $this->prepareSettings();
                 $this->setJsLibrary();
                 $this->addJsLibrary($pageRenderer);
@@ -160,7 +160,7 @@ class PageRendererHook
      *
      * @return bool
      */
-    private function initilialize(): bool
+    private function initialize(): bool
     {
         // Get the plugin configuration
         $this->settings = GeneralUtility::makeInstance(ConfigurationManager::class)
@@ -355,7 +355,7 @@ class PageRendererHook
     /**
      * Add the library to the PageRenderer.
      *
-     * @param \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer
+     * @param PageRenderer $pageRenderer
      *
      * @return void
      */
