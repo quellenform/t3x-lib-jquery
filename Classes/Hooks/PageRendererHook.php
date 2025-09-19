@@ -202,7 +202,7 @@ class PageRendererHook
         $addJsFooterLibrary = $this->settings['addJsFooterLibrary'] ?? false;
 
         $versionCdn = 0;
-        if (!(empty($version) || $version === 'latest') && (bool) $forceVersion) {
+        if (!(empty($version) || $version === 'latest') || (bool) $forceVersion) {
             $versionCdn = VersionNumberUtility::convertVersionNumberToInteger($version);
         }
         if ($versionCdn === 0) {
