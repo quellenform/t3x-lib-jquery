@@ -21,30 +21,69 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 /**
- * Add jQuery on top of javascript-stack
+ * Add jQuery library on top of javascript stack.
  */
-class PageRendererHook
+final class PageRendererHook
 {
     /**
-     * TypoScript configuration array.
-     *
-     * @var array
+     * @var int
      */
-    private $settings = null;
+    private $version = 0;
 
     /**
-     * The jsLibrary array which holds the final values.
-     *
-     * @var array
+     * @var bool
      */
-    private $jsLibrary = [
-        'file' => '',
-        'forceOnTop' => true,
-        'allWrap' => '',
-        'excludeFromConcatenation' => false,
-        'integrity' => '',
-        'crossorigin' => ''
-    ];
+    private $useCdn = true;
+
+    /**
+     * @var bool
+     */
+    private $localFallback = true;
+
+    /**
+     * @var bool
+     */
+    private $slim = false;
+
+    /**
+     * @var bool
+     */
+    private $minify = true;
+
+    /**
+     * @var bool
+     */
+    private $addJsFooterLibrary = false;
+
+    /**
+     * @var string
+     */
+    private $file = '';
+
+    /**
+     * @var bool
+     */
+    private $forceOnTop = true;
+
+    /**
+     * @var string
+     */
+    private $allWrap = '';
+
+    /**
+     * @var bool
+     */
+    private $excludeFromConcatenation = false;
+
+    /**
+     * @var string
+     */
+    private $integrity = '';
+
+    /**
+     * @var bool
+     */
+    private $anonymousCrossorigin = true;
 
     /**
      * Array of jQuery version numbers shipped with this extension.
@@ -52,9 +91,15 @@ class PageRendererHook
      * @var array
      */
     private $availableLocalJqueryVersions = [
-        3005000, 3005001,
-        3006000, 3006001, 3006002, 3006003, 3006004,
-        3007000, 3007001
+        3005000,
+        3005001,
+        3006000,
+        3006001,
+        3006002,
+        3006003,
+        3006004,
+        3007000,
+        3007001
     ];
 
     /**
@@ -74,6 +119,12 @@ class PageRendererHook
     /**
      * Array of SRI hashes.
      * $cat jquery.js | openssl dgst -sha512 -binary | openssl base64 -A
+     *
+     * [$version] =>
+     *   [0] => default
+     *   [1] => minified
+     *   [2] => slim
+     *   [3] => slim-minified
      *
      * @var array
      */
@@ -135,10 +186,11 @@ class PageRendererHook
     ];
 
     /**
-     * Insert javascript-tags for jQuery
+     * Execute pre-render hook.
      *
      * @param array $params Parameters
      * @param PageRenderer $pageRenderer PageRenderer
+     *
      * @return void
      */
     public function renderPreProcess(array $params, PageRenderer $pageRenderer): void
@@ -147,32 +199,53 @@ class PageRendererHook
             ($GLOBALS['TYPO3_REQUEST'] ?? null) instanceof ServerRequestInterface
             && ApplicationType::fromRequest($GLOBALS['TYPO3_REQUEST'])->isFrontend()
         ) {
-            if ($this->initialize()) {
-                $this->prepareSettings();
-                $this->setJsLibrary();
-                $this->addJsLibrary($pageRenderer);
-            }
+            $this->process($pageRenderer);
         }
     }
 
     /**
-     * Initialize the settings array and decide what to do next.
+     * Insert JavaScript tags for jQuery.
+     *
+     * @param PageRenderer $pageRenderer
+     *
+     * @return void
+     */
+    private function process(PageRenderer $pageRenderer): void
+    {
+        $settings = GeneralUtility::makeInstance(ConfigurationManager::class)
+            ->getConfiguration(
+                ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
+            )['plugin.']['tx_libjquery.'] ?? [];
+
+        if ($this->isEnabled($settings)) {
+            $this->initialize($settings);
+            if ($this->useCdn) {
+                $this->excludeFromConcatenation = true;
+            } else {
+                $this->anonymousCrossorigin = false;
+            }
+            $this->file = $this->replaceFilePlaceholders(
+                $this->jQueryCdnUrls[$settings['source']]['url']
+            );
+            $this->setIntegrity();
+            $this->setAllwrap();
+            $this->addJsLibrary($pageRenderer);
+        }
+    }
+
+    /**
+     * Check if jQuery should be integrated.
+     *
+     * @param array $settings
      *
      * @return bool
      */
-    private function initialize(): bool
+    private function isEnabled(array $settings): bool
     {
-        // Get the plugin configuration
-        $this->settings = GeneralUtility::makeInstance(ConfigurationManager::class)
-            ->getConfiguration(
-                ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
-            )['plugin.']['tx_libjquery.']['settings.'] ?? [];
         if (
-            isset($this->settings['enable']) &&
-            (bool) ($this->settings['enable']) &&
-            isset($this->settings['source']) &&
-            array_key_exists(
-                $this->settings['source'],
+            (bool) ($settings['enable'] ?? false)
+            && array_key_exists(
+                (string) ($settings['source'] ?? ''),
                 $this->jQueryCdnUrls
             )
         ) {
@@ -182,174 +255,154 @@ class PageRendererHook
     }
 
     /**
-     * Fill the settings array with meaningful values.
+     * Initialize.
+     *
+     * @param array $settings
      *
      * @return void
      */
-    private function prepareSettings(): void
+    private function initialize(array $settings): void
     {
-        $source = (string) $this->settings['source'];
-        $version = $this->settings['version'] ?? 'latest';
-        $localFallback = $this->settings['localFallback'] ?? true;
-        $excludeFromConcatenation = $this->settings['excludeFromConcatenation'] ?? false;
-        $anonymousCrossorigin = $this->settings['anonymousCrossorigin'] ?? true;
-        $slim = $this->settings['slim'] ?? false;
-        $minify = $this->settings['minify'] ?? true;
-        $forceOnTop = $this->settings['forceOnTop'] ?? true;
-        $forceVersion = $this->settings['forceVersion'] ?? false;
-        $localPath = $this->settings['localPath'] ?? '';
-        $sriHash = $this->settings['sriHash'] ?? '';
-        $addJsFooterLibrary = $this->settings['addJsFooterLibrary'] ?? false;
-
-        $versionCdn = 0;
-        if (!(empty($version) || $version === 'latest') || (bool) $forceVersion) {
-            $versionCdn = VersionNumberUtility::convertVersionNumberToInteger($version);
-        }
-        if ($versionCdn === 0) {
-            $versionCdn = end($this->availableLocalJqueryVersions);
-        }
-
-        // Set correct version-number for local version
-        $versionLocal = $versionCdn;
-        if (!in_array($versionCdn, $this->availableLocalJqueryVersions)) {
-            $versionLocal = $this->getNearestVersion($versionCdn);
-        }
-
-        // Set path to the local fallback file
-        if (empty($this->settings['localPath'])) {
-            $localPath = $this->jQueryCdnUrls['local']['url'];
-        }
-
-        // Enable the use of an external CDN
-        $useCdn = false;
-        if ($source !== 'local') {
-            $useCdn = true;
-            $excludeFromConcatenation = true;
-        }
-
-        // Enable gzip-version if compression is enabled and concatenation is disabled
-        $gzip = false;
-        if ((int) ($GLOBALS['TYPO3_CONF_VARS']['FE']['compressionLevel']) > 0 && (bool) $excludeFromConcatenation) {
-            $gzip = true;
-        }
-
-        // Overwrite settings array
-        $this->settings = [
-            'source' => $source,
-            'versionCdn' => $versionCdn,
-            'versionLocal' => $versionLocal,
-            'localFallback' => (bool) $localFallback,
-            'excludeFromConcatenation' => (bool) $excludeFromConcatenation,
-            'anonymousCrossorigin' => (bool) $anonymousCrossorigin,
-            'slim' => (bool) $slim,
-            'minify' => (bool) $minify,
-            'forceOnTop' => (bool) $forceOnTop,
-            'localPath' => (string) $localPath,
-            'sriHash' => (string) $sriHash,
-            'useCdn' => $useCdn,
-            'gzip' => $gzip,
-            'addJsFooterLibrary' => (bool) $addJsFooterLibrary
-        ];
+        $this->setVersions($settings['version'] ?? '');
+        $this->useCdn = $settings['source'] === 'local' ? false : true;
+        $this->localFallback = (bool) ($settings['localFallback'] ?? true);
+        $this->excludeFromConcatenation = (bool) ($settings['excludeFromConcatenation'] ?? false);
+        $this->anonymousCrossorigin = (bool) ($settings['anonymousCrossorigin'] ?? true);
+        $this->slim = (bool) ($settings['slim'] ?? false);
+        $this->minify = (bool) ($settings['minify'] ?? true);
+        $this->forceOnTop = (bool) ($settings['forceOnTop'] ?? true);
+        $this->addJsFooterLibrary = (bool) ($settings['addJsFooterLibrary'] ?? false);
     }
 
     /**
-     * Fill the JSLibrary array with useful values.
+     * Set versions to be used.
+     *
+     * @param string $versionString
      *
      * @return void
      */
-    private function setJsLibrary(): void
+    private function setVersions(string $versionString): void
     {
-        $filePart = ($this->settings['slim'] ? '.slim' : '') . ($this->settings['minify'] ? '.min' : '');
-        $local = true;
-
-        if ($this->settings['useCdn']) {
-            $url = $this->jQueryCdnUrls[$this->settings['source']]['url'];
-            $version = $this->settings['versionCdn'];
-            $local = false;
-            if ($this->settings['anonymousCrossorigin']) {
-                if (!empty($this->settings['sriHash'])) {
-                    // Override SRI Hash value
-                    $this->jsLibrary['integrity'] = $this->settings['sriHash'];
-                } else {
-                    if (in_array($this->settings['versionCdn'], array_keys($this->sriHashes))) {
-                        // Get hash index
-                        $hashIndex = (int) ($this->settings['minify']);
-                        if ($this->settings['slim']) {
-                            $hashIndex += 2;
-                        }
-                        $this->jsLibrary['integrity'] = $this->sriHashes[$this->settings['versionCdn']][$hashIndex];
-                    }
-                }
-            }
-            if ($this->settings['localFallback']) {
-                $this->jsLibrary['allWrap'] = $this->wrapFallback(
-                    $this->replaceFilePlaceholders(
-                        $this->settings['localPath'],
-                        $this->convertIntegerToVersionNumber($this->settings['versionLocal']),
-                        $filePart,
-                        true
-                    )
-                );
-            }
-            $this->jsLibrary['crossorigin'] = $this->settings['anonymousCrossorigin'] ? 'anonymous' : '';
+        if (
+            $versionString === 'latest'
+            || empty($versionString)
+        ) {
+            // Get latest available version provided by this extension
+            $versionNumber = end($this->availableLocalJqueryVersions);
         } else {
-            $url = $this->settings['localPath'];
-            $version = $this->settings['versionLocal'];
+            // Get specific version
+            $versionNumber = VersionNumberUtility::convertVersionNumberToInteger($versionString);
+            if (!in_array($versionNumber, $this->availableLocalJqueryVersions)) {
+                $versionNumber = $this->getNearestVersion($versionNumber);
+            }
         }
-        $this->jsLibrary['excludeFromConcatenation'] = $this->settings['excludeFromConcatenation'];
-        $this->jsLibrary['file'] = $this->replaceFilePlaceholders(
-            $url,
-            $this->convertIntegerToVersionNumber($version),
-            $filePart,
-            $local
+        $this->version = $versionNumber;
+    }
+
+    /**
+     * Get file parts for the final file name.
+     *
+     * @return string
+     */
+    private function getFileParts(): string
+    {
+        return (
+            $this->slim ? '.slim' : ''
+        ) . (
+            $this->minify ? '.min' : ''
         );
     }
 
-     /**
-      * Wrap the local fallback file in some javascript code which will enable the fallback.
-      *
-      * @return string
-      */
+    /**
+     * Set SRI hash for the CDN.
+     *
+     * @return void
+     */
+    private function setIntegrity(): void
+    {
+        if (
+            $this->useCdn
+            && $this->anonymousCrossorigin
+            && in_array($this->version, array_keys($this->sriHashes))
+        ) {
+            $hashIndex = (int) $this->minify;
+            if ($this->slim) {
+                $hashIndex += 2;
+            }
+            $this->integrity = $this->sriHashes[$this->version][$hashIndex];
+        }
+    }
+
+    /**
+     * Set wrap around the locally integrated fallback JavaScript library.
+     *
+     * @return void
+     */
+    private function setAllwrap(): void
+    {
+        if (
+            $this->useCdn
+            && $this->localFallback
+        ) {
+            $this->allWrap = $this->wrapFallback(
+                $this->replaceFilePlaceholders(
+                    $this->jQueryCdnUrls['local']['url']
+                )
+            );
+        }
+    }
+
+    /**
+     * Wrap the local fallback file in some javascript code which will enable the fallback.
+     *
+     * @param string $file
+     *
+     * @return string
+     */
     private function wrapFallback(string $file): string
     {
-        return '|' . LF . '<script>window.jQuery || document.write(\'<script src="' .
-            htmlspecialchars($file) .
-            '" type="text/javascript"><\/script>\')</script>' . LF;
+        return
+            '|' . LF . '<script>window.jQuery || document.write(\'<script src="'
+            . htmlspecialchars($file)
+            . '" type="text/javascript"><\/script>\')</script>' . LF;
     }
 
     /**
      * Replace placeholders in file string.
      *
      * @param string $url
-     * @param string $version
-     * @param boolean $external
      *
      * @return string
      */
-    private function replaceFilePlaceholders(
-        string $url,
-        string $version,
-        string $filePart,
-        bool $local = false
-    ): string {
+    private function replaceFilePlaceholders(string $url): string
+    {
         $file = sprintf(
             $url,
-            $version,
-            $filePart
-        ) . (($this->settings['gzip'] && $local) ? '.gzip' : '');
-        // Get relative path if the given file is local
+            $this->convertIntegerToVersionNumber($this->version),
+            $this->getFileParts()
+        );
+        // Get relative path if the given file is a local path
         if (substr($file, 0, 2) !== '//') {
-            $version = VersionNumberUtility::getCurrentTypo3Version();
-            if ((int) substr($version, 0, 2) > 10) {
-                $file = PathUtility::getPublicResourceWebPath($file);
-            } else {
-                if (substr($file, 0, 4) === 'EXT:') {
-                    $file = GeneralUtility::getFileAbsFileName($file);
-                }
-                $file = PathUtility::getAbsoluteWebPath($file);
-            }
+            $file .= ($this->useCompression() ? '.gz' : '');
+            $file = PathUtility::getPublicResourceWebPath($file);
         }
         return $file;
+    }
+
+    /**
+     * Use gzipped version of the provided JavaScript files?
+     *
+     * @return bool
+     */
+    private function useCompression(): bool
+    {
+        if (
+            $this->excludeFromConcatenation
+            && (int) ($GLOBALS['TYPO3_CONF_VARS']['FE']['compressionLevel'] ?? 0) > 0
+        ) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -361,36 +414,24 @@ class PageRendererHook
      */
     private function addJsLibrary(PageRenderer $pageRenderer): void
     {
-        if ($this->settings['addJsFooterLibrary']) {
-            $pageRenderer->addJsFooterLibrary(
-                'lib_jquery',
-                $this->jsLibrary['file'],
-                'text/javascript',
-                false,
-                $this->jsLibrary['forceOnTop'],
-                $this->jsLibrary['allWrap'],
-                $this->jsLibrary['excludeFromConcatenation'],
-                '|',
-                false,
-                $this->jsLibrary['integrity'],
-                false,
-                $this->jsLibrary['crossorigin']
-            );
+        $params = [
+            'lib_jquery',
+            $this->file,
+            'text/javascript',
+            false,
+            $this->forceOnTop,
+            $this->allWrap,
+            $this->excludeFromConcatenation,
+            '|',
+            false,
+            $this->integrity,
+            false,
+            $this->anonymousCrossorigin ? 'anonymous' : ''
+        ];
+        if ($this->addJsFooterLibrary) {
+            $pageRenderer->addJsFooterLibrary(...$params);
         } else {
-            $pageRenderer->addJsLibrary(
-                'lib_jquery',
-                $this->jsLibrary['file'],
-                'text/javascript',
-                false,
-                $this->jsLibrary['forceOnTop'],
-                $this->jsLibrary['allWrap'],
-                $this->jsLibrary['excludeFromConcatenation'],
-                '|',
-                false,
-                $this->jsLibrary['integrity'],
-                false,
-                $this->jsLibrary['crossorigin']
-            );
+            $pageRenderer->addJsLibrary(...$params);
         }
     }
 
@@ -398,6 +439,7 @@ class PageRendererHook
      * Return nearest available version number.
      *
      * @param int $version String representation of the selected version number
+     *
      * @return int
      */
     private function getNearestVersion(int $version): int
@@ -421,6 +463,7 @@ class PageRendererHook
      * Returns the three part version number (string) from an integer, eg 3015001 -> '3.15.1'.
      *
      * @param int $versionInteger Integer representation of version number
+     *
      * @return string Version number as format x.x.x
      */
     private function convertIntegerToVersionNumber(int $versionInteger = 0): string
