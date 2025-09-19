@@ -1,0 +1,78 @@
+categories:
+  jQuery:
+    label: 'JS Library: jQuery'
+
+settings:
+  plugin.tx_libjquery.enable:
+    label: 'Enable Extension'
+    description: 'Enable/disable the use of this extension.'
+    category: jQuery
+    type: bool
+    default: true
+
+  plugin.tx_libjquery.source:
+    label: 'Choose jQuery CDN'
+    description: 'Select "Local", if you don’t want to use a CDN and refer to a local file instead.'
+    category: jQuery
+    type: string
+    enum:
+      local: 'Local'
+      google: 'Google'
+      jquery: 'jQuery'
+      msn: 'MSN'
+      cloudflare: 'CloudFlare'
+      jsdelivr: 'jsDelivr'
+    default: 'jquery'
+
+  plugin.tx_libjquery.version:
+    label: 'jQuery version'
+    description: 'Choose the preferred jQuery-version in format X.X.X (default = "latest", which will grab the latest available version provided by this extension).'
+    category: jQuery
+    type: string
+    enum:
+      latest: 'Latest'
+      3.7.1: '3.7.1'
+      3.7.0: '3.7.0'
+      3.6.4: '3.6.4'
+      3.6.3: '3.6.3'
+      3.6.2: '3.6.2'
+      3.6.1: '3.6.1'
+      3.6.0: '3.6.0'
+      3.5.1: '3.5.1'
+      3.5.0: '3.5.0'
+    default: 'latest'
+
+  plugin.tx_libjquery.localFallback:
+    label: 'Enable local fallback'
+    description: 'Enable this if a local version should be included as fallback (only used if CDN != "Local").'
+    category: jQuery
+    type: bool
+    default: true
+
+  plugin.tx_libjquery.excludeFromConcatenation:
+    label: 'Exclude from concatenation'
+    description: 'Enable this if you do not want to concatenate the file (works only if file is local).'
+    category: jQuery
+    type: bool
+    default: false
+
+  plugin.tx_libjquery.anonymousCrossorigin:
+    label: 'Enable anonymous crossorigin'
+    description: 'Enable anonymous crossorigin-request (CORS) if you have troubles with https.'
+    category: jQuery
+    type: bool
+    default: true
+
+  plugin.tx_libjquery.slim:
+    label: 'Slim Version'
+    description: 'Enable this if you want to use the slim version (this will load "jquery-X.X.X.slim.js" instead of "jquery-X.X.X.js")'
+    category: jQuery
+    type: bool
+    default: false
+
+  plugin.tx_libjquery.minify:
+    label: 'Minified JavaScript'
+    description: 'Enable this if you want to use the minified JavaScript (this will load "jquery-X.X.X.min.js" instead of "jquery-X.X.X.js").'
+    category: jQuery
+    type: bool
+    default: true
