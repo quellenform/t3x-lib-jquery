@@ -99,7 +99,8 @@ final class PageRendererHook
         3006003,
         3006004,
         3007000,
-        3007001
+        3007001,
+        4000000
     ];
 
     /**
@@ -182,7 +183,13 @@ final class PageRendererHook
             'sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==',
             'sha512-docBEeq28CCaXCXN7cINkyQs0pRszdQsVBFWUd+pLNlEk3LDlSDDtN7i1H+nTB8tshJPQHS0yu0GW9YGFd/CRg==',
             'sha512-sNylduh9fqpYUK5OYXWcBleGzbZInWj8yCJAU57r1dpSK9tP2ghf/SRYCMj+KsslFkCOt3TvJrX2AV/Gc3wOqA=='
-        ]
+        ],
+        4000000 => [
+            'sha512-jx7pKV1OCCwD8nJVKETycdimr+xPg3VCP0Wc5tX0RdpusPKEC72eB5cyqgT48K5HxbXvbxIc/oDVb70QMhSeLw==',
+            'sha512-8LENNbXmzI/Gbj+OwXmqR6V4QaUAw0/porPzy1+dQoJqC0JPHedWoe0DDOTL2uHA5XXJyIsPtiMHH86pVlay6A==',
+            'sha512-cDsQVD/q/bWBMO5nZ2xNw/ubhoFb+8ytnBBk8kDbcUqKEuilBJ70DdIFky8RpCHd4M9qIdKDj7ELQG7j97837w==',
+            'sha512-1g+lD9RHY4sYTrehMnFuWSqn3GS1xE2nhSSb5a8JS0WYMnvm1iuxpajRACu0C9tmJSL78O7eQw9TUhGUsRFc0g=='
+        ],
     ];
 
     /**
